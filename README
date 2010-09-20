@@ -1,0 +1,23 @@
+This app is a bot for Bewjeweled Blitz on facebook. Some code (screen snapshot) is based on the sample app by Apple named OpenGLScreenSnapshot.
+
+Usage:
+
+- Open bejeweled blitz
+- Select "Show Grid" on JewelBot. This will display a grid the same size as the game board.
+- Start a new game in the web browser. 
+- When the game starts, select the JewelBot window. Then use the buttons or your arrow keys to move the grid.
+  Holding Shift moves it faster.
+  Line up so that the green boxes are in the center of the game board. Once it is lined up, select "Hide Grid"
+- Wait for the game in progress to finish. 
+- Start a new game. When you see 'Go' start to disappear, click the "Make Move" button or hit cmd-opt-a to start the bot
+- The bot will then run for 63 seconds. It will take control of the mouse during this time.
+
+Tuning:
+
+There are three inputs at the bottom for tuning. The game calculates reads the board and will then execute up to "Swaps" moves in a turn. At the end of the turn it will then wait for the board to stabilize up to 5 * "Delay". Finally, "Turbo" is how long until the delay is removed. Set this too soon and the bot may thrash making moves, as well as your system may slow down.
+
+Tuning warnings:
+- Don't set swaps more than 100.
+- Setting delay less than 2 may make the game thrash deciding moves and slow your system down
+- Setting turbo to lower than 30 will cause the bot to make moves very fast and slow your system down. Faster != higher score.
+  
