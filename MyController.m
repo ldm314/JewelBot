@@ -30,10 +30,24 @@ int getBlock(float r, float g, float b) {
 }
 
 MyController *gController;
+NSTimer *gTimer;
 
 OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void *userData) {
-	[gController makeMove:NULL];
-	return 0;
+	EventHotKeyID hkRef;
+    GetEventParameter(anEvent,kEventParamDirectObject,typeEventHotKeyID,NULL,sizeof(hkRef),NULL,&hkRef);
+	printf("keyhandler %d\n",hkRef.id);
+	
+    switch (hkRef.id) {
+        case 1: 
+			[gController makeMove:NULL];
+            break;
+			
+        case 2:
+			[gTimer invalidate];
+			break;
+			
+    }
+    return noErr;
 }
 
 
@@ -75,18 +89,22 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 {
 	EventHotKeyRef myHotKeyRef;
 	
-    EventHotKeyID myHotKeyID;
+    EventHotKeyID myHotKeyID1,myHotKeyID2;
 	
     EventTypeSpec eventType;
 	eventType.eventClass=kEventClassKeyboard;
 	
     eventType.eventKind=kEventHotKeyPressed;
 	InstallApplicationEventHandler(&myHotKeyHandler,1,&eventType,NULL,NULL);
-	myHotKeyID.signature='mhk1';
+	myHotKeyID1.signature='mhk1';
+	myHotKeyID1.id=1;
 	
-    myHotKeyID.id=1;
+	myHotKeyID2.signature='mhk2';
+    myHotKeyID2.id=2;
 	//cmd-opt-a
-	RegisterEventHotKey(0, cmdKey+optionKey, myHotKeyID, GetApplicationEventTarget(), 0, &myHotKeyRef);
+	RegisterEventHotKey(0, cmdKey+optionKey, myHotKeyID1, GetApplicationEventTarget(), 0, &myHotKeyRef);
+	//cmd-opt-s
+	RegisterEventHotKey(1, cmdKey+optionKey, myHotKeyID2, GetApplicationEventTarget(), 0, &myHotKeyRef);
 
 }
 
@@ -160,35 +178,44 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 
 - (IBAction)makeMove:(id)sender {
 	if(mWindow == NULL) [self initWindow];
-	[self hideWindow:self];
-	time_t start = time(NULL);
-	int waitCount;
-	while(time(NULL) - start < 62) {
+//	[self hideWindow:self];
+	mStart = time(NULL);
+	float interval = delay / 1000000;
+	gTimer = [NSTimer scheduledTimerWithTimeInterval: interval
+									 target: self
+								   selector: @selector(handleTimer:)
+								   userInfo: nil
+									repeats: YES];
+	
+}
+
+- (void) handleTimer: (NSTimer *) timer {
+	if(time(NULL) - mStart > 62) {
+		[gTimer invalidate];
+		return;
+	}
 		// Read the screen bits
 		[mOpenGLScreenReader readFullScreenToBuffer];
 		
 		[self captureBoard];
+		[mView setBoard:board];
+		[mView setNeedsDisplay:YES];
+
 		
 		int i,j;
-/*		for (i = 0; i < 8; i++) {
-			for (j = 0; j < 8; j++) {
-//				printf("%d,",board[i][j]);
-			}
-//			printf("\n");
-		}
-*/		
 		[self findMoves];
 		[self collapseMoves];
 		
-//		printf("FINAL SWAPS:\n");
+		//		printf("FINAL SWAPS:\n");
 		for(i = 0; i < swaps; i++)
 			if(mSwaps[i].x1 != -1) {
-
-//				printf("%d,%d  :  %d,%d\n",mSwaps[i].x1,mSwaps[i].y1,mSwaps[i].x2,mSwaps[i].y2);
+				
+				//				printf("%d,%d  :  %d,%d\n",mSwaps[i].x1,mSwaps[i].y1,mSwaps[i].x2,mSwaps[i].y2);
 				[self executeSwap: mSwaps[i]];
 				[self bringGameToFront];
 				usleep(5000);
 			}
+/*
 		waitCount = 0;
 		while(time(NULL) - start < turbotime && ![self isBoardStable] && waitCount < 5) {
 			[mOpenGLScreenReader readFullScreenToBuffer];
@@ -196,9 +223,7 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 			waitCount++;
 			usleep(delay);
 		}
-		
-//		usleep(25000);
-	}
+		*/
 }
 
 - (IBAction)oneShot:(id)sender {

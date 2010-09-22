@@ -27,6 +27,8 @@ typedef struct swap {
 	Swap mSwaps[MAXSWAPS];
 	id oldResponder;
 	int swaps,delay,turbotime;
+	time_t mStart;
+	NSTimer *mTimer;
 	
 	IBOutlet id mainWindow;
 	IBOutlet id maxSwaps;
