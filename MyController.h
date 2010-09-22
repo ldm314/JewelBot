@@ -14,14 +14,9 @@ typedef struct swap {
 	BOOL isSpecial;
 } Swap;
 
-typedef struct block {
-	int color;
-	BOOL isMultiplier;
-	BOOL isSpecial;
-} Block;
-
 @interface MyController : NSObject
 {
+@public
     OpenGLScreenReader *mOpenGLScreenReader;
 	NSWindow *mWindow;
 	MyView *mView;

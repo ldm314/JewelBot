@@ -1,14 +1,6 @@
 #import "MyController.h"
 #import <Carbon/Carbon.h>
 
-#define redBlock 1
-#define blueBlock 2
-#define purpleBlock 3
-#define greenBlock 4
-#define yellowBlock 5
-#define orangeBlock 6
-#define whiteBlock 7
-
 static char colors[8] = {'X','R','B','P','G','Y','O','W'};
 
 int getBlock(float r, float g, float b) {
@@ -23,7 +15,7 @@ int getBlock(float r, float g, float b) {
 	//Multiplier blocks
 	if (r > .7 && r < .8 && g > .7 && r < .8 && b < .55) return yellowBlock + 10;
 	if (r < .5 && b > .7) return blueBlock + 10;
-	if (r < .6 && g > .67 && b < .65) return greenBlock + 10;
+	if (r < .6 && g > .65 && b < .65) return greenBlock + 10;
 	if (r > .65 && g < .5 && b > .65) return purpleBlock + 10;
 	if (r > .7 && g > .4 && b < .44) return orangeBlock + 10;
 	if (r > .67 && g > .67 && b > .67 && r < .86 && b < .86 && g < .86) return whiteBlock + 10;
@@ -50,8 +42,8 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 - (id)init
 {
 	if(self = [super init]) {
-		captureX = 0;
-		captureY = 0;
+		captureX = 480;
+		captureY = 260;
 		mWindow = NULL;
 		mOpenGLScreenReader = [[OpenGLScreenReader alloc] init];
 		shift = NO;
@@ -211,11 +203,13 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 
 - (IBAction)oneShot:(id)sender {
 	if(mWindow == NULL) [self initWindow];
-	[self hideWindow:self];
+	//[self hideWindow:self];
 	// Read the screen bits
 	[mOpenGLScreenReader readFullScreenToBuffer];
 	
 	[self captureBoard];
+	[mView setBoard:board];
+	[mView setNeedsDisplay:YES];
 	
 	int i,j;
 	for (i = 7; i >= 0; i--) {
@@ -801,11 +795,12 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 				CGFloat gacc = 0.0;
 				CGFloat bacc = 0.0;
 				int count = 0;
-				for(k = i - 4; k < i  + 4; k ++)
-					for(l = j - 4; l < j + 4; l++) {
-						racc += (rawData[k*bytesPerRow + (l * bytesPerPixel)]     * 1.0) / 255.0;
-						gacc += (rawData[k*bytesPerRow + (l * bytesPerPixel) + 1] * 1.0) / 255.0;
-						bacc += (rawData[k*bytesPerRow + (l * bytesPerPixel) + 2] * 1.0) / 255.0;
+				int dim=4;
+				for(k = i - dim; k < i+dim; k ++)
+					for(l = j - dim; l < j+dim; l++) {
+						racc += (rawData[k*bytesPerRow + (l * bytesPerPixel)]     * 1.0/255.0);
+						gacc += (rawData[k*bytesPerRow + (l * bytesPerPixel) + 1] * 1.0/255.0);
+						bacc += (rawData[k*bytesPerRow + (l * bytesPerPixel) + 2] * 1.0/255.0);
 						count ++;
 					}
 				
@@ -826,6 +821,9 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 				board[y][x].color = getBlock(r, g, b);
 				board[y][x].isMultiplier = NO;
 				board[y][x].isSpecial = NO;
+				board[y][x].r = r;
+				board[y][x].g = g;
+				board[y][x].b = b;
 				
 				if(board[y][x].color >= 20) {
 					board[y][x].color -= 20;
@@ -836,8 +834,10 @@ OSStatus myHotKeyHandler(EventHandlerCallRef nextHandler, EventRef anEvent, void
 					board[y][x].isMultiplier = YES;
 				}
 				
-				if(board[y][x].color == -1)
+				if(board[y][x].color == -1) {
 					printf("***");
+					board[y][x].color = 0;
+				}
 				
 				printf("\n");
 					
